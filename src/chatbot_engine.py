@@ -32,11 +32,7 @@ def create_index() -> VectorStoreIndexWrapper:
     # 2つのローダーを組み合わせる
     documents = loader.load() + loader_txt.load()
 
-    for doc in documents:
-        print(f"Document: {doc}")
-
     return VectorstoreIndexCreator().from_documents(documents)
-
 
 # Indexをもとにtoolを作成
 def create_tools(index: VectorStoreIndexWrapper) -> List[BaseTool]:
@@ -54,6 +50,7 @@ def chat(
     llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0)
     tools = create_tools(index)
     
+    # memoryに過去の会話履歴を追加
     memory = ConversationBufferMemory(chat_memory=history, memory_key="chat_history", return_messages=True)
     
     agent_chain = initialize_agent(
