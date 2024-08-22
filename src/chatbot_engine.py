@@ -1,4 +1,5 @@
 import os
+import langchain
 from langchain.chat_models import ChatOpenAI
 from langchain.document_loaders import DirectoryLoader
 from langchain.indexes import VectorstoreIndexCreator
@@ -21,11 +22,21 @@ langchain.verbose = True
 def create_index() -> VectorStoreIndexWrapper:
     from unstructured.file_utils.filetype import EXT_TO_FILETYPE, FileType
 
+    # .pyファイルと.txtファイルをテキストファイルとして扱うように設定
     EXT_TO_FILETYPE[".py"] = FileType.TXT
+    EXT_TO_FILETYPE[".txt"] = FileType.TXT
 
-    # すべてのファイルタイプをインデックスに含める
-    loader = DirectoryLoader("./src/", glob="**/*.*")
-    return VectorstoreIndexCreator().from_loaders([loader])
+    loader = DirectoryLoader("./src/", glob="**/*.py")  # .py ファイルにマッチ
+    loader_txt = DirectoryLoader("./src/", glob="**/*.txt")  # .txt ファイルにマッチ
+
+    # 2つのローダーを組み合わせる
+    documents = loader.load() + loader_txt.load()
+
+    for doc in documents:
+        print(f"Document: {doc}")
+
+    return VectorstoreIndexCreator().from_documents(documents)
+
 
 # Indexをもとにtoolを作成
 def create_tools(index: VectorStoreIndexWrapper) -> List[BaseTool]:
